@@ -71,8 +71,8 @@ void show_sample(const dataset& dataset, int index){
     }
     else{
         std::cout << "Student: " << index << std::endl;
-        std::cout << "Assistance: " << dataset.entries[index * 2] << std::endl;
-        std::cout << "Hours worked: " << dataset.entries[index * 2 + 1] << std::endl;
+        std::cout << "Assistance: " << dataset.entries[index * dataset.num_entries] << std::endl;
+        std::cout << "Hours worked: " << dataset.entries[index * dataset.num_entries + 1] << std::endl;
         std::cout << "Passed: " << dataset.tags[index];
     }
 }

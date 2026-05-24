@@ -68,7 +68,7 @@ HD inline float sigmoid(float value){
     else if (value > positive_extreme)
         output = 1.0f;
     else
-        output = 1.0f / (1.0f + std::expf(value * -1));
+        output = 1.0f / (1.0f + expf(value * -1));
 
     return output;
 }

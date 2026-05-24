@@ -10,4 +10,4 @@
 
 void cuda_inference(const neural_network& network, const float* entries, float* output, const int num_samples, float* kernel_time_ms);
 
-#endif;
+#endif
