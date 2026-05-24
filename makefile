@@ -1,37 +1,54 @@
-CXX = g++
+#Pedro Velasco Santana
+#file: makefile
+
 NVCC = nvcc
+TARGET = test
 
-CXXFLAGS = -O2 -std=c++17 -Iinclude
-NVCCFLAGS = -O2 -std=c++17 -Iinclude
+SRC = src
+INC = include
+DATA = data
+GRAPH = graph
+SCRIPT = scripts
 
-TEST_SRC = prueba.cpp \
-           src/dataset.cpp \
-           src/neural_network.cpp \
-           src/timer.cpp
+NVCCFLAGS = -I$(INC)
 
-MAIN_SRC = src/main.cu \
-           src/dataset.cpp \
-           src/neural_network.cpp \
-           src/timer.cpp \
-           src/cpu_inference.cpp \
-           src/cuda_inference.cu
+SOURCES = \
+	test.cpp \
+	$(SRC)/cpu_inference.cpp \
+	$(SRC)/cuda_inference.cu \
+	$(SRC)/dataset.cpp \
+	$(SRC)/neural_network.cpp \
+	$(SRC)/timer.cpp
 
-TEST_TARGET = prueba
-MAIN_TARGET = cuda_neural_inference
+.PHONY: all dirs run plots experiment clean clean-results clean-all
 
-all: test
+all: $(TARGET)
 
-test:
-	$(CXX) $(CXXFLAGS) $(TEST_SRC) -o $(TEST_TARGET)
+$(TARGET): $(SOURCES)
+	$(NVCC) $(NVCCFLAGS) $(SOURCES) -o $(TARGET)
 
-run-test: test
-	./$(TEST_TARGET)
+dirs:
+	mkdir -p $(DATA)
+	mkdir -p $(GRAPH)
 
-main:
-	$(NVCC) $(NVCCFLAGS) $(MAIN_SRC) -o $(MAIN_TARGET)
+run: $(TARGET) dirs
+	bash $(SCRIPT)/run_tests.sh
 
-run-main: main
-	./$(MAIN_TARGET)
+plots: dirs
+	gnuplot $(SCRIPT)/plot_times_cpu.gp
+	gnuplot $(SCRIPT)/plot_times_gpu.gp
+	gnuplot $(SCRIPT)/plot_times_comparison.gp
+	gnuplot $(SCRIPT)/plot_speedup.gp
+	gnuplot $(SCRIPT)/plot_memory.gp
+
+experiment: run plots
 
 clean:
-	rm -f $(TEST_TARGET) $(MAIN_TARGET)
+	rm -f $(TARGET)
+
+clean-results:
+	rm -rf $(DATA)/*
+	rm -rf $(GRAPH)/*
+
+clean-all: clean clean-results
+

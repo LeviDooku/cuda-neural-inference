@@ -92,6 +92,7 @@ int main(int argc, char *argv[]){
     double gpu_total_time = t_total_gpu.stop_milliseconds();
 
     //Calculate accuracy
+
     for(int i = 0; i < NUM_SAMPLES_INFERENCE; ++i){
         int cpu_prediction = cpu_outputs[i] >= 0.5f ? 1 : 0;
         int gpu_prediction = gpu_outputs[i] >= 0.5f ? 1 : 0;
@@ -107,8 +108,20 @@ int main(int argc, char *argv[]){
     cpu_accuracy = 100.0 * cpu_success / NUM_SAMPLES_INFERENCE;
     gpu_accuracy = 100.0 * gpu_success / NUM_SAMPLES_INFERENCE;
 
+    //Calculate memory
+
+    size_t entries_memory_bytes = NUM_SAMPLES_INFERENCE * NUM_INPUTS * sizeof(float);
+    size_t output_memory_bytes = NUM_SAMPLES_INFERENCE * sizeof(float);
+    size_t network_memory_bytes = sizeof(neural_network);
+    size_t total_gpu_memory_bytes = entries_memory_bytes + output_memory_bytes + network_memory_bytes;
+
+    double total_gpu_memory_mb = total_gpu_memory_bytes / (1024.0 * 1024.0);
+
+    std::cout << NUM_SAMPLES_INFERENCE << " " << cpu_time << " " << gpu_total_time << " " << kernel_time_ms << " " << cpu_accuracy << " " << gpu_accuracy << " " << total_gpu_memory_mb << std::endl;
+
     delete[] cpu_outputs;
     delete[] gpu_outputs;
+
     release_dataset(training_data);
     release_dataset(inference_data);
 }
