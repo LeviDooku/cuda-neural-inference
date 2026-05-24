@@ -10,7 +10,8 @@
 #include "timer.h"
 
 int main() {
-    const int NUM_SAMPLES = 10;
+    const int NUM_SAMPLES = 10000;
+    const int DEBUG_SAMPLES = 10;
 
     dataset data;
     neural_network network;
@@ -18,11 +19,7 @@ int main() {
 
     std::cout << "Creating dataset..." << std::endl;
 
-    timer.start();
     create_dataset(data, NUM_SAMPLES);
-    double dataset_time = timer.stop_milliseconds();
-
-    std::cout << "Dataset created in " << dataset_time << " ms" << std::endl;
 
     std::cout << std::endl;
     std::cout << "Samples before normalization:" << std::endl;
@@ -48,20 +45,63 @@ int main() {
     std::cout << "Initializing neural network..." << std::endl;
     initialize_network(network);
 
-    std::cout << "Running forward pass for sample 0..." << std::endl;
+    std::cout << std::endl;
+    std::cout << "Some weights before training:" << std::endl;
+    std::cout << "input_hidden_weights[0]: " << network.input_hidden_weights[0] << std::endl;
+    std::cout << "input_hidden_weights[1]: " << network.input_hidden_weights[1] << std::endl;
+    std::cout << "output_hidden_weights[0]: " << network.output_hidden_weights[0] << std::endl;
+    std::cout << "output_hidden_weights[1]: " << network.output_hidden_weights[1] << std::endl;
 
-    float* sample = &data.entries[0];
-    float output = forward_sample(network, sample);
+    std::cout << std::endl;
+    std::cout << "Training neural network..." << std::endl;
 
-    std::cout << "Network output: " << output << std::endl;
+    train_network_cpu(network, data.entries, data.tags, NUM_SAMPLES, 1000, 0.01);
 
-    if (output >= 0.0f && output <= 1.0f) {
-        std::cout << "Forward pass OK: output is between 0 and 1" << std::endl;
-    } else {
-        std::cout << "Forward pass ERROR: output is outside [0, 1]" << std::endl;
+    std::cout << "Training finished." << std::endl;
+
+    std::cout << std::endl;
+    std::cout << "Some weights after training:" << std::endl;
+    std::cout << "input_hidden_weights[0]: " << network.input_hidden_weights[0] << std::endl;
+    std::cout << "input_hidden_weights[1]: " << network.input_hidden_weights[1] << std::endl;
+    std::cout << "output_hidden_weights[0]: " << network.output_hidden_weights[0] << std::endl;
+    std::cout << "output_hidden_weights[1]: " << network.output_hidden_weights[1] << std::endl;
+
+    dataset real_data;
+
+    create_dataset(real_data, 2000);
+    normalize_dataset(real_data);
+
+    int aciertos = 0;
+
+    std::cout << std::endl;
+    std::cout << "First predictions:" << std::endl;
+
+    for(int i = 0; i < real_data.num_samples; ++i){
+        int base = i * NUM_INPUTS;
+        float output = forward_sample(network, &real_data.entries[base]);
+
+        int prediction = output >= 0.5 ? 1 : 0;
+
+        if(prediction == real_data.tags[i])
+            aciertos++;
+
+        if(i < DEBUG_SAMPLES){
+            std::cout << "Student " << i << std::endl;
+            std::cout << "  Assistance: " << real_data.entries[base] << std::endl;
+            std::cout << "  Work hours: " << real_data.entries[base + 1] << std::endl;
+            std::cout << "  Real tag: " << real_data.tags[i] << std::endl;
+            std::cout << "  Output: " << output << std::endl;
+            std::cout << "  Prediction: " << prediction << std::endl;
+            std::cout << std::endl;
+        }
     }
 
+    double accuracy = 100.0 * aciertos / real_data.num_samples;
+
+    std::cout << "Accuracy: " << accuracy << "%" << std::endl;
+
     release_dataset(data);
+    release_dataset(real_data);
 
     return 0;
 }
