@@ -4,6 +4,7 @@
 // Purpose: basic testing for CPU and GPU inference
 
 #include<iostream>
+#include <cstdlib>
 
 #include "dataset.h"
 #include "neural_network.h"
@@ -84,10 +85,10 @@ int main(int argc, char *argv[]){
 
     //GPU inference
 
-    float* kernel_time_ms;
+    float kernel_time_ms = 0.0f;
 
     t_total_gpu.start();
-    cuda_inference(network, inference_data.entries, cpu_outputs, NUM_SAMPLES_INFERENCE, &kernel_time_ms);
+    cuda_inference(network, inference_data.entries, gpu_outputs, NUM_SAMPLES_INFERENCE, &kernel_time_ms);
     double gpu_total_time = t_total_gpu.stop_milliseconds();
 
     //Calculate accuracy
@@ -105,4 +106,9 @@ int main(int argc, char *argv[]){
 
     cpu_accuracy = 100.0 * cpu_success / NUM_SAMPLES_INFERENCE;
     gpu_accuracy = 100.0 * gpu_success / NUM_SAMPLES_INFERENCE;
+
+    delete[] cpu_outputs;
+    delete[] gpu_outputs;
+    release_dataset(training_data);
+    release_dataset(inference_data);
 }

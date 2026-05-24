@@ -4,7 +4,6 @@
 //Purpose: define the neural network
 
 #include "neural_network.h"
-#include <cmath>
 #include <random>
 
 const float MIN_WEIGHT = -0.5f;
@@ -26,26 +25,6 @@ void initialize_network(neural_network& network){
         network.output_hidden_weights[i] = weights(gen);
     
     network.output_bias = 0.0f;
-}
-
-float forward_sample(const neural_network& network, const float* sample){
-    float hidden[NUM_HIDDEN];
-
-    for(int i = 0; i < NUM_HIDDEN; ++i){
-        float sum = network.hidden_biases[i];
-
-        for(int j = 0; j < NUM_INPUTS; ++j)
-            sum += sample[j] * network.input_hidden_weights[i * NUM_INPUTS + j];
-
-        hidden[i] = relu(sum);
-    }
-
-    float output_sum = network.output_bias;
-    
-    for(int i = 0; i < NUM_HIDDEN; ++i)
-        output_sum += hidden[i] * network.output_hidden_weights[i];
-
-    return sigmoid(output_sum);
 }
 
 void train_network_cpu(neural_network& network, const float* entries, const float* tags, int num_samples, int epoch, float learning_rate){

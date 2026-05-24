@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include "cuda_inference.cuh"
-#include "neural_network.h"
 
 __constant__ neural_network constant_network;
 
@@ -14,39 +13,21 @@ __global__ void inference_kernel(const float* entries, float* output, int num_sa
 
     if(id < num_samples){
         int base = id * NUM_INPUTS;
-
-        float hidden[NUM_HIDDEN];
-
-        for(int h = 0; h < NUM_HIDDEN; ++h){
-            float sum = constant_network.hidden_biases[h];
-
-            for(int k = 0; k < NUM_INPUTS; ++k)
-                sum += entries[base + k] * constant_network.input_hidden_weights[h * NUM_INPUTS + k];
-
-            hidden[h] = relu(sum);
-        }
-
-        float output_sum = constant_network.output_bias;
-
-        for(int h = 0; h < NUM_HIDDEN; ++h){
-            output_sum += hidden[h] * constant_network.output_hidden_weights[h];
-        }
-
-        output[id] = sigmoid(output_sum);
+        output[id] = forward_sample(constant_network, &entries[base]);
     }
 }
 
 void cuda_inference(const neural_network& network, const float* entries, float* output, const int num_samples, float* kernel_time_ms){
-    float* constant_entries = nullptr;
-    float* constant_output = nullptr;
+    float* device_entries = nullptr;
+    float* device_output = nullptr;
 
     int entries_size = num_samples * NUM_INPUTS * sizeof(float);
     int output_size = num_samples * sizeof(float);
 
-    cudaMalloc((void**)&constant_entries, entries_size);
-    cudaMalloc((void**)&constant_output, output_size);
+    cudaMalloc((void**)&device_entries, entries_size);
+    cudaMalloc((void**)&device_output, output_size);
 
-    cudaMemcpy(constant_entries, entries, entries_size, cudaMemcpyHostToDevice);
+    cudaMemcpy(device_entries, entries, entries_size, cudaMemcpyHostToDevice);
 
     cudaMemcpyToSymbol(constant_network, &network, sizeof(neural_network));
 
@@ -61,18 +42,18 @@ void cuda_inference(const neural_network& network, const float* entries, float* 
 
     cudaEventRecord(start);
 
-    inference_kernel<<<blocks_per_grid, threads_per_block>>>(constant_entries,constant_output, num_samples);
+    inference_kernel<<<blocks_per_grid, threads_per_block>>>(device_entries,device_output, num_samples);
 
     cudaEventRecord(stop);
     cudaEventSynchronize(stop);
 
     cudaEventElapsedTime(kernel_time_ms, start, stop);
 
-    cudaMemcpy(output, constant_output, output_size, cudaMemcpyDeviceToHost);
+    cudaMemcpy(output, device_output, output_size, cudaMemcpyDeviceToHost);
 
     cudaEventDestroy(start);
     cudaEventDestroy(stop);
 
-    cudaFree(constant_entries);
-    cudaFree(constant_output);
+    cudaFree(device_entries);
+    cudaFree(device_output);
 }

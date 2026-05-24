@@ -68,14 +68,32 @@ HD inline float sigmoid(float value){
     else if (value > positive_extreme)
         output = 1.0f;
     else
-        output = 1.0f / (1.0f + std::exp(value * -1));
+        output = 1.0f / (1.0f + std::expf(value * -1));
 
     return output;
 }
 
 //Represents forward pass: doing the prediction for one student (sample)
 
-float forward_sample(const neural_network& network, const float* sample);
+HD inline float forward_sample(const neural_network& network, const float* sample){
+    float hidden[NUM_HIDDEN];
+
+    for(int i = 0; i < NUM_HIDDEN; ++i){
+        float sum = network.hidden_biases[i];
+
+        for(int j = 0; j < NUM_INPUTS; ++j)
+            sum += sample[j] * network.input_hidden_weights[i * NUM_INPUTS + j];
+
+        hidden[i] = relu(sum);
+    }
+
+    float output_sum = network.output_bias;
+    
+    for(int i = 0; i < NUM_HIDDEN; ++i)
+        output_sum += hidden[i] * network.output_hidden_weights[i];
+
+    return sigmoid(output_sum);
+}
 
 void train_network_cpu(neural_network& network, const float* entries, const float* tags, int num_samples, int epoch, float learning_rate);
 
