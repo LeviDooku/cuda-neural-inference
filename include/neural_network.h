@@ -24,6 +24,10 @@ struct neural_network{
     float output_bias; //Bias for output
 };
 
+//Assign the initial values of the parametres.
+//Weights are selected randomly between -0.5 and 0.5
+//Biases are initialized to 0
+
 void initialize_network(neural_network& network);
 
 //Activation functions
@@ -39,7 +43,7 @@ float relu(float value);
 
 float sigmoid(float value);
 
-//Represents forward pass
+//Represents forward pass: doing the prediction for one student (sample)
 
 float forward_sample(const neural_network& network, const float* sample);
 

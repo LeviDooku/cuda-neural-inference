@@ -29,7 +29,7 @@ void create_dataset(dataset& dataset, int num_samples){
 
     std::uniform_int_distribution<int> assistance(0, MAX_ASSISTANCE);
     std::uniform_int_distribution<int> work_hour(0, MAX_WORK_HOURS);
-    std::uniform_int_distribution<float> noise(NOISE_MIN, NOISE_MAX);
+    std::uniform_real_distribution<float> noise(NOISE_MIN, NOISE_MAX);
 
     for(int i = 0; i < num_samples; ++i){
         int base = i * dataset.num_entries;
