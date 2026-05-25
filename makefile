@@ -32,7 +32,7 @@ dirs:
 	mkdir -p $(GRAPH)
 
 run: $(TARGET) dirs
-	bash $(SCRIPT)/run_tests.sh
+	bash $(SCRIPT)/run_test.sh
 
 plots: dirs
 	gnuplot $(SCRIPT)/plot_times_cpu.gp
