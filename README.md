@@ -182,11 +182,62 @@ The benchmark system compares:
 
 These results are stored in a data file and later used to generate performance graphs.
 
+## Instalation
 
+```bash
+git clone https://github.com/LeviDooku/cuda-neural-inference.git
+cd cuda-neural-inference.git
+make
+```
 
+The makefile includes several useful rules:
 
+```bash
+make              # Compile the project
+make run          # Compile and run the benchmark script
+make plots        # Generate performance graphs using gnuplot
+make experiment   # Run benchmarks and generate graphs
+make clean        # Remove the compiled executable
+make clean-results # Remove generated data and graph files
+make clean-all    # Remove executable, data files and graph files
+```
 
-Fuentes / ayuda:
+## Examples
+
+## Examples
+
+The benchmark can be executed with:
+
+```bash
+make experiment
+```
+
+## Performance results
+
+These results were obtained using the following hardware:
+
+- CPU: Intel Core i7-9700F
+- GPU: NVIDIA GeForce RTX 2080 Ti
+
+The following table shows a summary of the benchmark results. Only some representative dataset sizes are included to keep the table readable.
+
+| Samples | CPU time (ms) | GPU total time (ms) | GPU kernel time (ms) | Total GPU speedup | Kernel speedup | Accuracy | GPU memory (MB) |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 0.009 | 75.379 | 0.023 | 0.0001x | 0.39x | 94.00% | 0.001 |
+| 10,000 | 0.775 | 74.926 | 0.023 | 0.01x | 33.48x | 92.07% | 0.115 |
+| 1,000,000 | 84.102 | 67.056 | 0.043 | 1.25x | 1942.51x | 91.83% | 11.444 |
+| 10,000,000 | 812.631 | 87.003 | 0.233 | 9.34x | 3489.25x | 91.87% | 114.441 |
+| 50,000,000 | 4084.100 | 188.194 | 1.096 | 21.70x | 3725.74x | 91.90% | 572.205 |
+| 100,000,000 | 8432.720 | 276.044 | 2.174 | 30.55x | 3878.75x | 91.89% | 1144.410 |
+| 200,000,000 | 16507.000 | 483.276 | 4.329 | 34.16x | 3813.13x | 91.90% | 2288.820 |
+
+Speedup is calculated as:
+
+```text
+Speedup = CPU time / GPU time
+```
+
+## Useful links
 
 [https://cplusplus.com/reference/random/](https://cplusplus.com/reference/random/)
 
