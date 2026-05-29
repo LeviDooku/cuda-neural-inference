@@ -33,7 +33,7 @@ void train_network_cpu(neural_network& network, const float* entries, const floa
             float hidden[NUM_HIDDEN];
             int base = j * NUM_INPUTS;
 
-            for(int h = 0; h < NUM_HIDDEN; ++h){
+            for(int h = 0; h < NUM_HIDDEN; ++h){    
                 float sum = network.hidden_biases[h];
         
                 for(int k = 0; k < NUM_INPUTS; ++k)
