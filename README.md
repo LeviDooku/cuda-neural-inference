@@ -39,6 +39,150 @@ The results are used to analyze when GPU execution becomes worthwhile and how th
 * Gnuplot
 * Bash scripting
 
+## How it works
+
+The project is divided into several stages: dataset generation, data normalization, neural network initialization, CPU training, CPU inference, GPU inference and performance measurement.
+
+### 1. Dataset generation
+
+The program generates synthetic data representing students. Each student is described using two input values:
+
+* Attendance hours.
+* Hours dedicated to the final project.
+
+Each sample also has a binary label:
+
+* `1.0` if the student passes.
+* `0.0` if the student fails.
+
+The dataset is stored using two dynamic arrays:
+
+* `entries`: stores the input values of all samples.
+* `tags`: stores the expected output label for each sample.
+
+For each student, the program generates random attendance hours and work hours. Then, it calculates a weighted score using both values. A small random noise value is added to make the dataset less deterministic and more realistic.
+
+If the final score is greater than or equal to the defined threshold, the student is labeled as passed. Otherwise, the student is labeled as failed.
+
+### 2. Data normalization
+
+Before training or inference, the input values are normalized.
+
+Attendance hours are divided by the maximum possible attendance value, and work hours are divided by the maximum possible number of work hours.
+
+This transforms both input values into a similar range, making the neural network easier to train and improving numerical stability.
+
+### 3. Neural network structure
+
+The project uses a fixed simple neural network with a `2-8-1` architecture:
+
+* 2 input values.
+* 8 hidden neurons.
+* 1 output value.
+
+The two inputs represent the normalized attendance and work hours.
+
+The hidden layer uses the ReLU activation function. The output layer uses the sigmoid activation function, which produces a value between `0` and `1`.
+
+The final output is interpreted as the probability or tendency of the student passing the subject.
+
+### 4. Network initialization
+
+Before training, the network parameters are initialized.
+
+The weights are initialized with small random values between `-0.5` and `0.5`. This helps avoid all neurons learning the same behavior.
+
+The biases are initialized to `0`.
+
+The network stores four groups of parameters:
+
+* Weights from the input layer to the hidden layer.
+* Biases of the hidden neurons.
+* Weights from the hidden layer to the output neuron.
+* Bias of the output neuron.
+
+### 5. Forward pass
+
+The forward pass is the process used to calculate the prediction for one sample.
+
+First, each hidden neuron receives the two input values, multiplies them by their corresponding weights, adds its bias and applies the ReLU activation function.
+
+Then, the output neuron combines the values produced by the hidden layer, applies its own weights and bias, and finally applies the sigmoid activation function.
+
+The result is a value between `0` and `1`.
+
+A value greater than or equal to `0.5` can be interpreted as a positive prediction, meaning that the student is predicted to pass.
+
+### 6. CPU training
+
+The network is trained on the CPU using a basic backpropagation implementation.
+
+For each epoch, the program iterates over all training samples. For each sample, it performs a forward pass, compares the prediction with the expected label, calculates the error and updates the network weights and biases.
+
+The learning rate controls how much the parameters are updated during each training step.
+
+A higher learning rate can make training faster but less stable. A lower learning rate can make training more stable but slower.
+
+### 7. CPU inference
+
+Once the network has been trained, the CPU inference implementation is used as the sequential baseline.
+
+The CPU version iterates over all inference samples. For each sample, it calculates the position of its input values in the `entries` array and calls the same `forward_sample` function used by the network.
+
+The prediction is stored in the output array.
+
+This version processes samples one by one, so its execution time grows linearly with the number of inference samples.
+
+### 8. GPU inference with CUDA
+
+The GPU version parallelizes the inference phase using CUDA.
+
+The key idea is that each sample can be processed independently. The prediction for one student does not depend on the prediction for any other student.
+
+Because of this, each CUDA thread is assigned to process one sample.
+
+The neural network is copied to CUDA constant memory before launching the kernel. This is useful because the network is small, read-only during inference and shared by all threads.
+
+The CUDA kernel calculates the global thread identifier and uses it to select the sample that the thread must process. If the thread identifier is within the valid range, the thread performs the forward pass and stores the result in the output array.
+
+### 9. GPU memory management
+
+The CUDA inference function performs the following steps:
+
+1. Reserve memory on the GPU for the input samples.
+2. Reserve memory on the GPU for the output predictions.
+3. Copy the input data from CPU memory to GPU memory.
+4. Copy the trained neural network to CUDA constant memory.
+5. Configure the number of CUDA blocks and threads.
+6. Launch the inference kernel.
+7. Measure the kernel execution time using CUDA events.
+8. Copy the output predictions from GPU memory back to CPU memory.
+9. Free the allocated GPU memory.
+
+The implementation uses `256` threads per block. The number of blocks is calculated so that all samples are covered, even when the number of samples is not exactly divisible by the block size.
+
+### 10. Time measurement and testing
+
+The project measures different execution times in order to compare CPU and GPU inference.
+
+CPU time is measured using a custom timer based on `std::chrono`.
+
+GPU kernel time is measured using CUDA events. This measures only the time spent executing the kernel on the GPU.
+
+The total GPU time includes additional overhead, such as memory allocation, memory transfers and kernel launch.
+
+The benchmark system compares:
+
+* CPU inference time.
+* Total GPU inference time.
+* GPU kernel execution time.
+* CPU accuracy.
+* GPU accuracy.
+* GPU memory usage.
+
+These results are stored in a data file and later used to generate performance graphs.
+
+
 
 
 
